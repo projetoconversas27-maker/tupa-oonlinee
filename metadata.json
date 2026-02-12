@@ -1,0 +1,7 @@
+{
+  "name": "Copy of QuickRide - Sistema de Solicitação de Corridas",
+  "description": "Uma plataforma moderna de transporte com sugestões inteligentes de localização, gestão de passageiros e status de corrida em tempo real.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
