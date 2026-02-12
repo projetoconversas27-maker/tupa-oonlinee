@@ -31,43 +31,13 @@ const INITIAL_MOCK_HISTORY: RideRequest[] = [
     messages: [
       { id: 'm1', sender: 'driver', text: 'Estou chegando no ponto de encontro!', timestamp: Date.now() - 1000 * 60 * 2 }
     ]
-  },
-  {
-    id: 'sim-active-2',
-    osNumber: '88271104',
-    passengerName: 'Juliana Paes',
-    passengerCpf: '987.***.***-21',
-    passengerWhatsapp: '(93) 98118-3360',
-    destination: 'Hospital Municipal, Emergência',
-    category: RideCategory.SUV,
-    status: RideStatus.ACCEPTED,
-    driverName: 'Fernanda Lima',
-    driverInfo: { 
-      name: "Fernanda Lima", 
-      photo: "https://i.pravatar.cc/150?u=fernanda", 
-      rating: 4.7, 
-      vehicle: "Jeep Compass Preto", 
-      plate: "LPT-3341" 
-    },
-    distanceKm: 3.8,
-    createdAt: Date.now() - 1000 * 60 * 10,
-    messages: []
-  },
-  {
-    id: 'fake-1',
-    osNumber: '18272626',
-    passengerName: 'Exemplo de Passageiro 1',
-    passengerCpf: '000.***.***-00',
-    passengerWhatsapp: '(93) 98118-3360',
-    destination: 'Aeroporto Internacional, Portão 2',
-    category: RideCategory.CARRO,
-    status: RideStatus.FINISHED,
-    createdAt: Date.now() - 1000 * 60 * 60 * 2,
-    messages: []
   }
 ];
 
+type AppView = 'HOME' | 'FORM' | 'DASHBOARD';
+
 const App: React.FC = () => {
+  const [view, setView] = useState<AppView>('HOME');
   const [rides, setRides] = useState<RideRequest[]>([]);
   const [history, setHistory] = useState<RideRequest[]>(INITIAL_MOCK_HISTORY);
   const [currentTheme, setCurrentTheme] = useState<Theme>(themes[0]);
@@ -75,10 +45,8 @@ const App: React.FC = () => {
   const [showSupport, setShowSupport] = useState(false);
   const [activeChatRideId, setActiveChatRideId] = useState<string | null>(null);
 
-  // Simulação de movimento do motorista e status
   useEffect(() => {
     const interval = setInterval(() => {
-      // Atualiza rides ativas (da tela principal)
       setRides(prevRides => {
         let changed = false;
         const newRides = prevRides.map(ride => {
@@ -91,7 +59,6 @@ const App: React.FC = () => {
                if (Math.random() > 0.95) {
                  changed = true;
                  updatedRide.status = RideStatus.FINISHED;
-                 // Move para o histórico ao finalizar
                  setHistory(h => [updatedRide, ...h]);
                }
             }
@@ -102,7 +69,6 @@ const App: React.FC = () => {
         return changed || filtered.length !== prevRides.length ? filtered : prevRides;
       });
 
-      // Atualiza simulações no histórico (para manter o realismo da distância)
       setHistory(prevHistory => prevHistory.map(ride => {
         if (ride.status === RideStatus.ACCEPTED && ride.distanceKm !== undefined && ride.distanceKm > 0.1) {
           return { ...ride, distanceKm: Math.max(0.1, ride.distanceKm - 0.05) };
@@ -139,6 +105,7 @@ const App: React.FC = () => {
       createdAt: Date.now(),
     };
     setRides(prev => [newRide, ...prev]);
+    setView('DASHBOARD');
   };
 
   const handleSendMessage = (rideId: string, text: string) => {
@@ -149,11 +116,9 @@ const App: React.FC = () => {
       }
       return ride;
     };
-
     setRides(prev => prev.map(updateMsg));
     setHistory(prev => prev.map(updateMsg));
 
-    // Resposta automática
     setTimeout(() => {
       const reply = (ride: RideRequest) => {
         if (ride.id === rideId) {
@@ -182,24 +147,77 @@ const App: React.FC = () => {
   return (
     <div className={`h-screen overflow-hidden transition-all duration-1000 ${currentTheme.class} p-4 md:p-6 lg:p-8 flex flex-col items-center justify-center relative`}>
       
-      <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="w-full h-full max-w-[1400px] flex flex-col relative z-10">
         <Header currentTheme={currentTheme} onThemeChange={setCurrentTheme} />
         
-        <main className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mt-1">
-          <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <RideForm onSubmit={handleAddRide} onOpenHistory={() => setShowHistory(true)} />
+        {view === 'HOME' && (
+          <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in fade-in duration-700">
+            <div className="text-center mb-12">
+              <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-[3rem] border border-white/20 flex items-center justify-center mx-auto mb-6 shadow-2xl animate-bounce">
+                <i className="fa-solid fa-car-side text-6xl text-white"></i>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4 drop-shadow-2xl">
+                QUICKRIDE EXPRESS
+              </h2>
+              <p className="text-white/60 font-medium uppercase tracking-[0.4em] text-xs md:text-sm">
+                Sua corrida a um toque de distância
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-6 w-full max-w-md px-6">
+              <button 
+                onClick={() => setView('FORM')}
+                className="w-full bg-white text-blue-600 hover:bg-blue-50 py-8 rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] transition-all active:scale-95 shadow-[0_20px_60px_rgba(0,0,0,0.3)] flex items-center justify-center gap-4 group"
+              >
+                <i className="fa-solid fa-plus-circle text-2xl group-hover:rotate-90 transition-transform"></i>
+                Nova Corrida
+              </button>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button 
+                  onClick={() => setShowHistory(true)}
+                  className="bg-black/20 backdrop-blur-md border border-white/10 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest transition-all hover:bg-white/10 active:scale-95"
+                >
+                  <i className="fa-solid fa-clock-rotate-left mr-2"></i>
+                  Histórico
+                </button>
+                <button 
+                  onClick={() => setView('DASHBOARD')}
+                  className="bg-black/20 backdrop-blur-md border border-white/10 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest transition-all hover:bg-white/10 active:scale-95"
+                >
+                  <i className="fa-solid fa-gauge mr-2"></i>
+                  Painel
+                </button>
+              </div>
+            </div>
           </div>
-          
-          <div className="lg:col-span-7 xl:col-span-8 flex flex-col min-h-0 bg-black/10 backdrop-blur-xl rounded-[2.5rem] border border-white/10 p-4 md:px-8 md:py-6 shadow-2xl animate-in fade-in slide-in-from-right-4 duration-1000 delay-200">
-            <RideList 
-              rides={rides} 
-              onOpenChat={(ride) => setActiveChatRideId(ride.id)}
-            />
-          </div>
-        </main>
+        )}
+
+        {(view === 'FORM' || view === 'DASHBOARD') && (
+          <main className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mt-1">
+            <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-center animate-in fade-in slide-in-from-left-4 duration-700">
+              <div className="mb-2">
+                <button 
+                  onClick={() => setView('HOME')}
+                  className="text-white/60 hover:text-white flex items-center gap-2 text-[10px] font-black uppercase tracking-widest mb-2 transition-colors"
+                >
+                  <i className="fa-solid fa-arrow-left"></i> Voltar ao Início
+                </button>
+              </div>
+              <RideForm onSubmit={handleAddRide} onOpenHistory={() => setShowHistory(true)} />
+            </div>
+            
+            <div className="lg:col-span-7 xl:col-span-8 flex flex-col min-h-0 bg-black/10 backdrop-blur-xl rounded-[2.5rem] border border-white/10 p-4 md:px-8 md:py-6 shadow-2xl animate-in fade-in slide-in-from-right-4 duration-1000 delay-200">
+              <RideList 
+                rides={rides} 
+                onOpenChat={(ride) => setActiveChatRideId(ride.id)}
+              />
+            </div>
+          </main>
+        )}
 
         <footer className="pt-2 pb-2 shrink-0"></footer>
       </div>
@@ -212,7 +230,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* MODAL HISTÓRICO */}
       {showHistory && (
         <div className="fixed inset-0 z-[10000] flex flex-col bg-white animate-in slide-in-from-top duration-500 overflow-hidden">
           <div className="p-8 border-b border-gray-100 flex justify-between items-center shrink-0 bg-gray-50/80 backdrop-blur-md">
@@ -227,7 +244,6 @@ const App: React.FC = () => {
               <button 
                 onClick={() => setShowHistory(false)} 
                 className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-black text-white flex items-center justify-center transition-all hover:bg-red-600 active:scale-90 shadow-2xl group border-none"
-                aria-label="Fechar Histórico"
               >
                 <i className="fa-solid fa-xmark text-3xl group-hover:rotate-90 transition-transform"></i>
               </button>
@@ -256,17 +272,6 @@ const App: React.FC = () => {
                       <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-1">Passageiro</p>
                       <p className="text-2xl font-black text-gray-900 tracking-tight leading-none uppercase">{ride.passengerName}</p>
                     </div>
-                    
-                    {ride.status === RideStatus.ACCEPTED && ride.distanceKm !== undefined && (
-                      <div className="bg-blue-600 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-blue-500/20">
-                         <div className="flex items-center gap-3">
-                            <i className="fa-solid fa-truck-fast animate-bounce"></i>
-                            <span className="text-xs font-black uppercase tracking-widest">Motorista a caminho</span>
-                         </div>
-                         <span className="font-mono font-black">{ride.distanceKm.toFixed(1)} km</span>
-                      </div>
-                    )}
-
                     <div className="flex items-start gap-4 bg-white/90 p-6 rounded-3xl border border-white shadow-sm">
                       <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                         <i className="fa-solid fa-map-location-dot"></i>
@@ -276,64 +281,18 @@ const App: React.FC = () => {
                         <p className="text-sm text-gray-700 font-bold leading-relaxed">{ride.destination}</p>
                       </div>
                     </div>
-                    
-                    <div className="flex flex-col gap-3 pt-3">
-                      <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 pt-3">
                         <div className="flex-1 flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm">
                           <i className={`fa-solid ${ride.category === RideCategory.MOTO ? 'fa-motorcycle' : 'fa-car'} text-gray-400 text-sm`}></i>
                           <span className="text-[11px] font-black uppercase text-gray-700 tracking-tighter">{ride.category}</span>
                         </div>
                         <div className={`flex-1 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg ${ride.status === RideStatus.FINISHED ? 'bg-emerald-500 text-white' : 'bg-blue-600 text-white'}`}>
-                          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                          <span className="text-[11px] font-black uppercase tracking-tighter">{ride.status === RideStatus.FINISHED ? 'Concluída' : ride.status}</span>
+                          <span className="text-[11px] font-black uppercase tracking-tighter">{ride.status === RideStatus.FINISHED ? 'Concluída' : 'Ativa'}</span>
                         </div>
-                      </div>
-
-                      {ride.status === RideStatus.ACCEPTED && (
-                        <div className="grid grid-cols-2 gap-3">
-                          <button 
-                            onClick={() => {
-                              setActiveChatRideId(ride.id);
-                              setShowHistory(false);
-                            }}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white py-5 rounded-3xl shadow-xl flex items-center justify-center gap-3 transition-all active:scale-95 border-none group"
-                          >
-                            <i className="fa-solid fa-comment-dots text-lg group-hover:scale-110 transition-transform"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest">CONVERSAR</span>
-                          </button>
-                          <button 
-                            onClick={() => {
-                              if(confirm('Deseja realmente cancelar esta corrida?')) {
-                                handleCancelRide(ride.id);
-                              }
-                            }}
-                            className="bg-red-50 hover:bg-red-100 text-red-600 py-5 rounded-3xl border border-red-100 flex items-center justify-center gap-3 transition-all active:scale-95 group"
-                          >
-                            <i className="fa-solid fa-ban text-lg group-hover:rotate-12 transition-transform"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest">CANCELAR</span>
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          <div className="p-8 md:p-12 border-t border-gray-100 bg-gray-50/90 shrink-0">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="text-center md:text-left">
-                <p className="text-xs font-black text-gray-400 uppercase tracking-[0.4em] mb-2">Suporte especializado</p>
-                <h4 className="text-gray-900 font-black text-xl md:text-2xl">Dúvidas sobre alguma corrida?</h4>
-              </div>
-              <button 
-                onClick={() => setShowSupport(true)}
-                className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-16 py-7 rounded-[2.5rem] font-black text-lg uppercase tracking-[0.25em] transition-all active:scale-95 shadow-[0_20px_50px_rgba(16,185,129,0.3)] flex items-center justify-center gap-5 group border-none"
-              >
-                <i className="fa-solid fa-headset text-4xl group-hover:rotate-12 transition-transform"></i>
-                FALAR COM SUPORTE
-              </button>
             </div>
           </div>
         </div>
@@ -347,9 +306,7 @@ const App: React.FC = () => {
               <i className="fa-solid fa-phone-volume animate-bounce"></i>
             </div>
             <h4 className="text-3xl font-black text-gray-900 mb-4 uppercase tracking-tighter">Central 24h</h4>
-            <p className="text-gray-400 text-xs font-bold mb-12 leading-relaxed uppercase tracking-[0.2em] px-6 opacity-60">Linha direta para atendimento emergencial e técnico.</p>
             <div className="bg-gray-50 border-4 border-emerald-50 p-10 rounded-[3rem] mb-12 shadow-sm group">
-              <p className="text-gray-400 text-[11px] font-black uppercase tracking-[0.4em] mb-5 opacity-40">WhatsApp Business</p>
               <p className="text-4xl md:text-5xl font-mono font-black text-emerald-600 tracking-tighter group-hover:scale-110 transition-transform duration-500">93 98118-3360</p>
             </div>
             <button onClick={() => setShowSupport(false)} className="w-full bg-black text-white py-7 rounded-3xl font-black text-sm uppercase tracking-[0.4em] transition-all active:scale-95 shadow-2xl border-none">FECHAR CANAL</button>
