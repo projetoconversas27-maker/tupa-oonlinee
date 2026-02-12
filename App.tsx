@@ -155,19 +155,13 @@ const App: React.FC = () => {
         
         {view === 'HOME' && (
           <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in fade-in duration-700">
-            <div className="text-center mb-12">
+            <div className="text-center mb-8">
               <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-[3rem] border border-white/20 flex items-center justify-center mx-auto mb-6 shadow-2xl animate-bounce">
                 <i className="fa-solid fa-car-side text-6xl text-white"></i>
               </div>
-              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4 drop-shadow-2xl">
-                QUICKRIDE EXPRESS
-              </h2>
-              <p className="text-white/60 font-medium uppercase tracking-[0.4em] text-xs md:text-sm">
-                Sua corrida a um toque de distância
-              </p>
             </div>
 
-            <div className="flex flex-col gap-6 w-full max-w-md px-6">
+            <div className="flex flex-col gap-4 w-full max-w-md px-6">
               <button 
                 onClick={() => setView('FORM')}
                 className="w-full bg-white text-blue-600 hover:bg-blue-50 py-8 rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] transition-all active:scale-95 shadow-[0_20px_60px_rgba(0,0,0,0.3)] flex items-center justify-center gap-4 group"
@@ -176,22 +170,13 @@ const App: React.FC = () => {
                 Nova Corrida
               </button>
 
-              <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={() => setShowHistory(true)}
-                  className="bg-black/20 backdrop-blur-md border border-white/10 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest transition-all hover:bg-white/10 active:scale-95"
-                >
-                  <i className="fa-solid fa-clock-rotate-left mr-2"></i>
-                  Histórico
-                </button>
-                <button 
-                  onClick={() => setView('DASHBOARD')}
-                  className="bg-black/20 backdrop-blur-md border border-white/10 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest transition-all hover:bg-white/10 active:scale-95"
-                >
-                  <i className="fa-solid fa-gauge mr-2"></i>
-                  Painel
-                </button>
-              </div>
+              <button 
+                onClick={() => setShowHistory(true)}
+                className="w-full bg-black/20 backdrop-blur-md border border-white/10 text-white py-6 rounded-[2.5rem] font-black text-xs uppercase tracking-widest transition-all hover:bg-white/10 active:scale-95 flex items-center justify-center gap-3"
+              >
+                <i className="fa-solid fa-clock-rotate-left text-lg"></i>
+                Histórico de Pedidos
+              </button>
             </div>
           </div>
         )}
